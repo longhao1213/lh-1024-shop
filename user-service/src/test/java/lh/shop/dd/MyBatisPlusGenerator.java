@@ -61,7 +61,7 @@ public class MyBatisPlusGenerator {
                 // 数据库表映射到实体的命名策略
                 .setNaming(NamingStrategy.underline_to_camel)
 
-                //使用lombok
+                //使用lombok插件
                 .setEntityLombokModel(true)
 
                 //使用restcontroller注解
@@ -73,7 +73,7 @@ public class MyBatisPlusGenerator {
 
         //4. 包名策略配置
         PackageConfig pkConfig = new PackageConfig();
-        pkConfig.setParent("net.xdclass")
+        pkConfig.setParent("com.user")
                 .setMapper("mapper")
                 .setService("service")
                 .setController("controller")
