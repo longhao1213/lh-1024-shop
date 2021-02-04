@@ -1,7 +1,10 @@
 package com.lh.controller;
 
 
+import com.lh.exception.BizException;
+import com.lh.model.AddressDO;
 import com.lh.service.AddressService;
+import com.lh.utils.JsonData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -30,9 +33,14 @@ public class AddressController {
 
     @ApiOperation("根据id查找收获地址详情")
     @GetMapping("/find/{address_id}")
-    public Object detail(@ApiParam(value = "地址id",required = true)
-            @PathVariable("address_id") long addressId) {
-        return addressService.detail(addressId);
+    public Object detail(@ApiParam(value = "地址id", required = true)
+                         @PathVariable("address_id") long addressId) {
+//        int i = 1/0;
+        if (addressId == 1) {
+            throw new BizException(-1, "测试自定义异常");
+        }
+        AddressDO addressDO = addressService.detail(addressId);
+        return JsonData.buildSuccess(addressDO);
     }
 }
 
