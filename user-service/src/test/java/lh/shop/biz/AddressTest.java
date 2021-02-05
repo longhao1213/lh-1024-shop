@@ -32,5 +32,6 @@ public class AddressTest {
         AddressDO addressDO = addressService.detail(1L);
         log.info(addressDO.toString());
         Assert.assertNotNull(addressDO);
+
     }
 }

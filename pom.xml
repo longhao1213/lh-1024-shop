@@ -25,6 +25,7 @@
             <version>1.7.25</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 
     <properties>
@@ -104,6 +105,13 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons.lang3.version}</version>
+            </dependency>
+
+            <!--验证码kaptcha依赖包-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>kaptcha-spring-boot-starter</artifactId>
+                <version>1.1.0</version>
             </dependency>
 
         </dependencies>
