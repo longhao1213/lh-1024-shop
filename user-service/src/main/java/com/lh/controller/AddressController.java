@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -31,6 +30,8 @@ public class AddressController {
     @Autowired
     private AddressService addressService;
 
+
+
     @ApiOperation("根据id查找收获地址详情")
     @GetMapping("/find/{address_id}")
     public Object detail(@ApiParam(value = "地址id", required = true)
@@ -42,5 +43,6 @@ public class AddressController {
         AddressDO addressDO = addressService.detail(addressId);
         return JsonData.buildSuccess(addressDO);
     }
+
 }
 

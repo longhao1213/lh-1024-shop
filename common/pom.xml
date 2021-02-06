@@ -19,7 +19,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
 
-        <!--swagger ui接口文档依赖-->∑
+        <!--swagger ui接口文档依赖-->
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-boot-starter</artifactId>
@@ -75,5 +75,6 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
         </dependency>
+
     </dependencies>
 </project>
