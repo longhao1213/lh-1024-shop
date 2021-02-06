@@ -9,6 +9,10 @@ spring:
     url: jdbc:mysql://longsan:3306/lh_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
+  redis:
+    host: longsan
+    password: 123456
+    port: 8000
 
 #配置plus打印sql日志
 mybatis-plus:
