@@ -1,14 +1,20 @@
 package com.lh.controller;
 
 import com.google.code.kaptcha.Producer;
+import com.lh.enums.BizCodeEnum;
+import com.lh.enums.SendCodeEnum;
+import com.lh.service.NotifyService;
 import com.lh.utils.CommonUtil;
+import com.lh.utils.JsonData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
@@ -38,6 +44,9 @@ public class NotifyController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private NotifyService notifyService;
+
     // redis中验证码过期时间
     private static final long CAPTCHA_CODE_EXPIRED = 60 * 1000 * 10;
 
@@ -53,6 +62,26 @@ public class NotifyController {
             ImageIO.write(image, "jpg", outputStream);
         } catch (Exception e) {
             log.error("图形验证码生成异常");
+        }
+    }
+
+    @ApiOperation("发送验证码")
+    @GetMapping("/send_code")
+    public JsonData sendRegisterCode(
+            @ApiParam("收信人") @RequestParam(value = "to", required = true) String to,
+            @ApiParam("图形验证码") @RequestParam(value = "captcha", required = true) String captcha,
+            HttpServletRequest request
+    ) {
+        String key = getCaptchaKey(request);
+        String cacheCaptcha = (String) redisTemplate.opsForValue().get(key);
+        if (captcha != null && cacheCaptcha != null && captcha.equalsIgnoreCase(cacheCaptcha)) {
+            // 验证码正确
+            redisTemplate.delete(key);
+            return notifyService.sendCode(SendCodeEnum.USER_REGISTER, to);
+
+        }else {
+            // 验证码错误
+            return JsonData.buildResult(BizCodeEnum.CODE_CAPTCHA);
         }
     }
 

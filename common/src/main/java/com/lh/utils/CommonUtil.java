@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
+import java.util.Random;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -76,5 +77,30 @@ public class CommonUtil {
         }
         return null;
 
+    }
+
+    /**
+     * 获取指定长度的随机数
+     * @param length
+     * @return
+     */
+    public static String getRandomCode(int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append(new Random().nextInt(9));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 获取当前时间戳
+     * @return
+     */
+    public static long getCurrentTimestamp() {
+        return System.currentTimeMillis();
+    }
+
+    public static void main(String[] args){
+        System.out.println(CommonUtil.getRandomCode(3));
     }
 }
