@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -98,6 +99,14 @@ public class CommonUtil {
      */
     public static long getCurrentTimestamp() {
         return System.currentTimeMillis();
+    }
+
+    /**
+     * 生成uuid
+     * @return
+     */
+    public static String generateUUID() {
+        return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 32);
     }
 
     public static void main(String[] args){

@@ -14,4 +14,6 @@ import com.lh.utils.JsonData;
 public interface NotifyService {
 
     JsonData sendCode(SendCodeEnum sendCodeEnum, String to);
+
+    boolean checkCode(SendCodeEnum sendCodeEnum, String to, String code);
 }

@@ -2,6 +2,8 @@ package com.lh.service;
 
 import com.lh.model.UserDO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lh.utils.JsonData;
+import request.UserRegisterRequest;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface UserService extends IService<UserDO> {
 
+    JsonData register(UserRegisterRequest userRegisterRequest);
 }
