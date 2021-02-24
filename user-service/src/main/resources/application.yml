@@ -29,8 +29,8 @@ spring:
 aliyun:
   oss:
     endpoint: oss-cn-chengdu.aliyuncs.com
-    access-key-id: LTAIe20PcNuGzmUr
-    access-key-secret: VnpIko7xuGxzQ8fAX3ylxH51J0vtO3
+    access-key-id: fweafewafawef
+    access-key-secret: Vfwaeflkjnaweljfb
     bucket_name: lh-1024-shop
 
 #配置plus打印sql日志
