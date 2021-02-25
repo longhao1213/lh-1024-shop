@@ -3,7 +3,7 @@ package com.lh.service;
 import com.lh.model.UserDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lh.utils.JsonData;
-import request.UserRegisterRequest;
+import com.lh.request.UserRegisterRequest;
 
 /**
  * <p>
