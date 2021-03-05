@@ -2,6 +2,7 @@ package com.lh.controller;
 
 
 import com.lh.enums.BizCodeEnum;
+import com.lh.request.UserLoginRequest;
 import com.lh.service.FileService;
 import com.lh.service.UserService;
 import com.lh.utils.JsonData;
@@ -45,6 +46,12 @@ public class UserController {
     @PostMapping("/userRegister")
     public JsonData userRegister(@ApiParam(value = "用户注册对象",required = true) @RequestBody UserRegisterRequest userRegisterRequest) {
         return userService.register(userRegisterRequest);
+    }
+
+    @ApiOperation("用户登录")
+    @PostMapping("/userLogin")
+    public JsonData userLogin(@ApiParam("用户登录对象") @RequestBody UserLoginRequest userLoginRequest) {
+        return userService.login(userLoginRequest);
     }
 
 }

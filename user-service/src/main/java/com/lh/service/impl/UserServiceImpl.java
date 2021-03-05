@@ -3,13 +3,16 @@ package com.lh.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lh.enums.BizCodeEnum;
 import com.lh.enums.SendCodeEnum;
+import com.lh.model.LoginUser;
 import com.lh.model.UserDO;
 import com.lh.mapper.UserMapper;
+import com.lh.request.UserLoginRequest;
 import com.lh.service.NotifyService;
 import com.lh.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
+import com.lh.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.lh.request.UserRegisterRequest;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -76,6 +80,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
 
     }
+
+    /**
+     * 1、根据Mail去找有没这记录
+     * 2、有的话，则用秘钥+用户传递的明文密码，进行加密，再和数据库的密文进行匹配
+     *
+     * @param userLoginRequest
+     * @return
+     */
+    @Override
+    public JsonData login(UserLoginRequest userLoginRequest) {
+
+        List<UserDO> userDOList =  userMapper.selectList(new QueryWrapper<UserDO>().eq("mail",userLoginRequest.getMail()));
+
+        if(userDOList!=null && userDOList.size()==1){
+            //已经注册
+            UserDO userDO = userDOList.get(0);
+            String cryptPwd = Md5Crypt.md5Crypt(userLoginRequest.getPwd().getBytes(),userDO.getSecret());
+            if(cryptPwd.equals(userDO.getPwd())){
+                //登录成功,生成token
+                LoginUser userDTO = new LoginUser();
+                BeanUtils.copyProperties(userDTO, userDTO);
+                String token = JwtUtils.geneJsonWebToken(userDTO);
+                log.info("用户登录token，{}", token);
+                return JsonData.buildSuccess(token);
+            }else {
+                return JsonData.buildResult(BizCodeEnum.ACCOUNT_PWD_ERROR);
+            }
+        }else {
+            //未注册
+            return JsonData.buildResult(BizCodeEnum.ACCOUNT_UNREGISTER);
+        }
+
+
+    }
+
 
     /**
      * 校验用户账号唯一

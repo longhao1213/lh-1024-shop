@@ -1,9 +1,13 @@
 package com.lh.request;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.JsonObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import springfox.documentation.spring.web.json.Json;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -40,6 +44,18 @@ public class UserRegisterRequest {
 
     @ApiModelProperty(value = "验证码",example = "232343")
     private String code;
+
+    public static void main(String[] args){
+        UserRegisterRequest userRegisterRequest = new UserRegisterRequest();
+        userRegisterRequest.setName("longsan");
+        userRegisterRequest.setPwd("123456");
+        userRegisterRequest.setHeadImg("12312");
+        userRegisterRequest.setSlogan("这是我的个性");
+        userRegisterRequest.setSex(1);
+        userRegisterRequest.setMail("1281578910@qq.com");
+        userRegisterRequest.setCode("6885");
+        System.out.println(JSONObject.toJSON(userRegisterRequest));
+    }
 
 
 
