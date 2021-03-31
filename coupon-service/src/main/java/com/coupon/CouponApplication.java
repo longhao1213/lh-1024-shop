@@ -1,5 +1,6 @@
 package com.coupon;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -14,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date 2021/01/28 16:00
  */
 @SpringBootApplication
+@MapperScan("com.coupon.mapper")
 public class CouponApplication {
     private final static Logger logger = LoggerFactory.getLogger(CouponApplication.class);
 

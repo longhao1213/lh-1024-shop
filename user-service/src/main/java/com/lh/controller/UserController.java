@@ -6,6 +6,7 @@ import com.lh.request.UserLoginRequest;
 import com.lh.service.FileService;
 import com.lh.service.UserService;
 import com.lh.utils.JsonData;
+import com.lh.vo.UserVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,6 +53,13 @@ public class UserController {
     @PostMapping("/userLogin")
     public JsonData userLogin(@ApiParam("用户登录对象") @RequestBody UserLoginRequest userLoginRequest) {
         return userService.login(userLoginRequest);
+    }
+
+    @ApiOperation("查看用户详情")
+    @PostMapping("/detail")
+    public JsonData detail() {
+        UserVo userVo = userService.findUserDetail();
+        return JsonData.buildSuccess(userVo);
     }
 
 }

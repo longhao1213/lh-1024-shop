@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.lh.request.UserLoginRequest;
 import com.lh.utils.JsonData;
 import com.lh.request.UserRegisterRequest;
+import com.lh.vo.UserVo;
 
 /**
  * <p>
@@ -19,4 +20,6 @@ public interface UserService extends IService<UserDO> {
     JsonData register(UserRegisterRequest userRegisterRequest);
 
     JsonData login(UserLoginRequest userLoginRequest);
+
+    UserVo findUserDetail();
 }

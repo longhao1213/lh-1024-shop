@@ -3,6 +3,7 @@ package com.lh.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lh.enums.BizCodeEnum;
 import com.lh.enums.SendCodeEnum;
+import com.lh.interceptor.LoginInterceptor;
 import com.lh.model.LoginUser;
 import com.lh.model.UserDO;
 import com.lh.mapper.UserMapper;
@@ -13,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
 import com.lh.utils.JwtUtils;
+import com.lh.vo.UserVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
@@ -99,8 +101,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             String cryptPwd = Md5Crypt.md5Crypt(userLoginRequest.getPwd().getBytes(),userDO.getSecret());
             if(cryptPwd.equals(userDO.getPwd())){
                 //登录成功,生成token
-                LoginUser userDTO = new LoginUser();
-                BeanUtils.copyProperties(userDTO, userDTO);
+                LoginUser userDTO = LoginUser.builder().build();
+                BeanUtils.copyProperties(userDO, userDTO);
                 String token = JwtUtils.geneJsonWebToken(userDTO);
                 log.info("用户登录token，{}", token);
                 return JsonData.buildSuccess(token);
@@ -113,6 +115,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
 
 
+    }
+
+    /**
+     * 查看用户详情
+     * @return
+     */
+    @Override
+    public UserVo findUserDetail() {
+        LoginUser loginUser = LoginInterceptor.threadLocal.get();
+        UserDO userDO = userMapper.selectOne(new QueryWrapper<UserDO>().eq("id", loginUser.getId()));
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(userDO, userVo);
+        return userVo;
     }
 
 

@@ -1,6 +1,10 @@
 package com.lh.service;
 
 import com.lh.model.AddressDO;
+import com.lh.request.AddressAddRequest;
+import com.lh.vo.AddressVO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +16,20 @@ import com.lh.model.AddressDO;
  */
 public interface AddressService {
 
-    AddressDO detail(long id);
+    AddressVO detail(long id);
+
+    int add(AddressAddRequest addressAddRequest);
+
+    /**
+     * 根据id删除地址
+     * @param addressId
+     * @return
+     */
+    int del(int addressId);
+
+    /**
+     * 查找用户全部收货地址
+     * @return
+     */
+    List<AddressVO> listUserAllAddress();
 }

@@ -3,6 +3,7 @@ package lh.shop.biz;
 import com.lh.UserApplication;
 import com.lh.model.AddressDO;
 import com.lh.service.AddressService;
+import com.lh.vo.AddressVO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,9 +30,9 @@ public class AddressTest {
 
     @Test
     public void testAddressDetail() {
-        AddressDO addressDO = addressService.detail(1L);
-        log.info(addressDO.toString());
-        Assert.assertNotNull(addressDO);
+        AddressVO addressVO = addressService.detail(1l);
+        log.info(addressVO.toString());
+        Assert.assertNotNull(addressVO);
 
     }
 }

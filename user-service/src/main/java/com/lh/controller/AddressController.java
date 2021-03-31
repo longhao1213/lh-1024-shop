@@ -1,18 +1,20 @@
 package com.lh.controller;
 
 
+import com.lh.enums.BizCodeEnum;
 import com.lh.exception.BizException;
 import com.lh.model.AddressDO;
+import com.lh.request.AddressAddRequest;
 import com.lh.service.AddressService;
 import com.lh.utils.JsonData;
+import com.lh.vo.AddressVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * <p>
@@ -40,8 +42,45 @@ public class AddressController {
         if (addressId == 1) {
             throw new BizException(-1, "测试自定义异常");
         }
-        AddressDO addressDO = addressService.detail(addressId);
-        return JsonData.buildSuccess(addressDO);
+        AddressVO addressVO = addressService.detail(addressId);
+        return JsonData.buildSuccess(addressVO);
+    }
+
+    @ApiOperation("添加收货地址")
+    @PostMapping("/add")
+    public Object add(@RequestBody AddressAddRequest addressAddRequest) {
+        int row = addressService.add(addressAddRequest);
+        return JsonData.buildSuccess(row);
+    }
+
+    /**
+     * 删除指定收货地址
+     * @param addressId
+     * @return
+     */
+    @ApiOperation("删除指定收货地址")
+    @DeleteMapping("/del/{address_id}")
+    public JsonData del(
+            @ApiParam(value = "地址id",required = true)
+            @PathVariable("address_id")int addressId){
+
+        int rows = addressService.del(addressId);
+
+        return rows == 1 ? JsonData.buildSuccess(): JsonData.buildResult(BizCodeEnum.ADDRESS_DEL_FAIL);
+    }
+
+
+    /**
+     * 查询用户的全部收货地址
+     * @return
+     */
+    @ApiOperation("查询用户的全部收货地址")
+    @GetMapping("/list")
+    public JsonData findUserAllAddress(){
+
+        List<AddressVO> list = addressService.listUserAllAddress();
+
+        return JsonData.buildSuccess(list);
     }
 
 }

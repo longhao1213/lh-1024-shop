@@ -1,5 +1,6 @@
 package com.lh.model;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -11,6 +12,7 @@ import lombok.Data;
  * @Date 2021/03/05 15:15
  */
 @Data
+@Builder
 public class LoginUser {
 
     private Long id;
