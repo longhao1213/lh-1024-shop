@@ -88,5 +88,10 @@
             <version>1.2.75</version>
         </dependency>
 
+        <!--分布式锁-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+        </dependency>
     </dependencies>
 </project>

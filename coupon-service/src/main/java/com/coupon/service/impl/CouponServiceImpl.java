@@ -21,16 +21,23 @@ import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
 import com.lh.vo.PageDataVo;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author 龙三
@@ -46,10 +53,16 @@ public class CouponServiceImpl implements CouponService {
     @Autowired
     private CouponRecordMapper couponRecordMapper;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
     @Override
     public PageDataVo pageCouponActivity(int page, int size) {
-        Page<CouponDO> pageInfo = new Page<>(page,size);
-        IPage<CouponDO> couponDOIPage =  couponMapper.selectPage(pageInfo,new QueryWrapper<CouponDO>()
+        Page<CouponDO> pageInfo = new Page<>(page, size);
+        IPage<CouponDO> couponDOIPage = couponMapper.selectPage(pageInfo, new QueryWrapper<CouponDO>()
                 .eq("publish", CouponPublishEnum.PUBLISH)
                 .eq("category", CouponCategoryEnum.PROMOTION)
                 .orderByDesc("create_time"));
@@ -67,60 +80,132 @@ public class CouponServiceImpl implements CouponService {
      * 2 校验优惠券是否可以领取：时间、库存、超过限制
      * 3 扣减库存
      * 4 保存领券几率
+     *
      * @param couponId
      * @param category
      * @return
      */
     @Override
     public JsonData addCoupon(long couponId, CouponCategoryEnum category) {
+
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
 
-        CouponDO couponDO = couponMapper.selectOne(new QueryWrapper<CouponDO>()
-                .eq("id", couponId)
-                .eq("category", category.name()));
+        // 使用框架加锁方式
+        String lockKey = "lock:coupon:" + couponId;
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock();
+        log.info("加锁成功：{}", Thread.currentThread().getId());
+        try {
+            // 执行业务逻辑
+            CouponDO couponDO = couponMapper.selectOne(new QueryWrapper<CouponDO>()
+                    .eq("id", couponId)
+                    .eq("category", category.name()));
 
-        // 优惠券是否可以领取
-        this.checkCoupon(couponDO, loginUser.getId());
+            // 优惠券是否可以领取
+            this.checkCoupon(couponDO, loginUser.getId());
 
-        // 构建领券几率
-        CouponRecordDO couponRecordDO = new CouponRecordDO();
-        BeanUtils.copyProperties(couponDO, couponRecordDO);
-        couponRecordDO.setCreateTime(new Date());
-        couponRecordDO.setUseState(CouponStateEnum.NEW.name());
-        couponRecordDO.setUserId(loginUser.getId());
-        couponRecordDO.setUserName(loginUser.getName());
-        couponRecordDO.setCouponId(couponId);
-        couponRecordDO.setId(null);
+            // 构建领券几率
+            CouponRecordDO couponRecordDO = new CouponRecordDO();
+            BeanUtils.copyProperties(couponDO, couponRecordDO);
+            couponRecordDO.setCreateTime(new Date());
+            couponRecordDO.setUseState(CouponStateEnum.NEW.name());
+            couponRecordDO.setUserId(loginUser.getId());
+            couponRecordDO.setUserName(loginUser.getName());
+            couponRecordDO.setCouponId(couponId);
+            couponRecordDO.setId(null);
 
-        // 扣减库存 TODO
-        int rows = couponMapper.reduceStock(couponId);
+            // 扣减库存
+            int rows = couponMapper.reduceStock(couponId);
 
-        if (rows == 1) {
-            couponRecordMapper.insert(couponRecordDO);
-        } else {
-            log.warn("发放优惠券失败：{},用户：{}", couponDO, loginUser);
-            throw new BizException(BizCodeEnum.COUPON_NO_STOCK);
+            if (rows == 1) {
+                couponRecordMapper.insert(couponRecordDO);
+            } else {
+                log.warn("发放优惠券失败：{},用户：{}", couponDO, loginUser);
+                throw new BizException(BizCodeEnum.COUPON_NO_STOCK);
+            }
+        } finally {
+            // 解锁
+            lock.unlock();
+            log.info("解锁：{}", Thread.currentThread().getId());
         }
+
+
+
+    // 传统加锁方式
+//        String uuid = CommonUtil.generateUUID();
+//        String lockKey = "lock:coupon:" + couponId;
+//        Boolean lockFlag = redisTemplate.opsForValue().setIfAbsent(lockKey, uuid, Duration.ofSeconds(30));
+//        if (lockFlag) {
+//            log.info("加锁成功：{}", couponId);
+//            try {
+//                // 执行业务逻辑
+//                CouponDO couponDO = couponMapper.selectOne(new QueryWrapper<CouponDO>()
+//                        .eq("id", couponId)
+//                        .eq("category", category.name()));
+//
+//                // 优惠券是否可以领取
+//                this.checkCoupon(couponDO, loginUser.getId());
+//
+//                // 构建领券几率
+//                CouponRecordDO couponRecordDO = new CouponRecordDO();
+//                BeanUtils.copyProperties(couponDO, couponRecordDO);
+//                couponRecordDO.setCreateTime(new Date());
+//                couponRecordDO.setUseState(CouponStateEnum.NEW.name());
+//                couponRecordDO.setUserId(loginUser.getId());
+//                couponRecordDO.setUserName(loginUser.getName());
+//                couponRecordDO.setCouponId(couponId);
+//                couponRecordDO.setId(null);
+//
+//                // 扣减库存
+//                int rows = couponMapper.reduceStock(couponId);
+//
+//                if (rows == 1) {
+//                    couponRecordMapper.insert(couponRecordDO);
+//                } else {
+//                    log.warn("发放优惠券失败：{},用户：{}", couponDO, loginUser);
+//                    throw new BizException(BizCodeEnum.COUPON_NO_STOCK);
+//                }
+//            }finally {
+//                // 解锁
+//                String script = "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
+//                Integer result = (Integer) redisTemplate.execute(new DefaultRedisScript<>(script, Integer.class), Arrays.asList(lockKey), uuid);
+//                log.info("解锁：{}",result);
+//            }
+//        } else {
+//            // 加锁失败
+//            try {
+//                TimeUnit.SECONDS.sleep(1);
+//            } catch (InterruptedException e) {
+//                log.error("自旋失败");
+//            }
+//            addCoupon(couponId, category);
+//
+//        }
+
+
+
+
         return JsonData.buildSuccess();
-    }
+}
 
     /**
      * 校验优惠券是否可以领取
+     *
      * @param couponDO
      * @param id
      */
     private void checkCoupon(CouponDO couponDO, Long id) {
-        if(couponDO==null){
+        if (couponDO == null) {
             throw new BizException(BizCodeEnum.COUPON_NO_EXITS);
         }
 
         //库存是否足够
-        if(couponDO.getStock()<=0){
+        if (couponDO.getStock() <= 0) {
             throw new BizException(BizCodeEnum.COUPON_NO_STOCK);
         }
 
         //判断是否是否发布状态
-        if(!couponDO.getPublish().equals(CouponPublishEnum.PUBLISH.name())){
+        if (!couponDO.getPublish().equals(CouponPublishEnum.PUBLISH.name())) {
             throw new BizException(BizCodeEnum.COUPON_GET_FAIL);
         }
 
@@ -128,23 +213,23 @@ public class CouponServiceImpl implements CouponService {
         long time = CommonUtil.getCurrentTimestamp();
         long start = couponDO.getStartTime().getTime();
         long end = couponDO.getEndTime().getTime();
-        if(time<start || time>end){
+        if (time < start || time > end) {
             throw new BizException(BizCodeEnum.COUPON_OUT_OF_TIME);
         }
 
         //用户是否超过限制
-        int recordNum =  couponRecordMapper.selectCount(new QueryWrapper<CouponRecordDO>()
-                .eq("coupon_id",couponDO.getId())
-                .eq("user_id",id));
+        int recordNum = couponRecordMapper.selectCount(new QueryWrapper<CouponRecordDO>()
+                .eq("coupon_id", couponDO.getId())
+                .eq("user_id", id));
 
-        if(recordNum >= couponDO.getUserLimit()){
+        if (recordNum >= couponDO.getUserLimit()) {
             throw new BizException(BizCodeEnum.COUPON_OUT_OF_LIMIT);
         }
     }
 
     private CouponVO beanProcess(CouponDO couponDO) {
         CouponVO couponVO = new CouponVO();
-        BeanUtils.copyProperties(couponDO,couponVO);
+        BeanUtils.copyProperties(couponDO, couponVO);
         return couponVO;
     }
 }
