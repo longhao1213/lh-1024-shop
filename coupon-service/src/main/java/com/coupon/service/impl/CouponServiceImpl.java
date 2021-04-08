@@ -8,7 +8,6 @@ import com.coupon.model.CouponDO;
 import com.coupon.mapper.CouponMapper;
 import com.coupon.model.CouponRecordDO;
 import com.coupon.service.CouponService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.coupon.vo.CouponVO;
 import com.lh.enums.BizCodeEnum;
 import com.lh.enums.CouponCategoryEnum;
@@ -25,14 +24,11 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -53,8 +49,8 @@ public class CouponServiceImpl implements CouponService {
     @Autowired
     private CouponRecordMapper couponRecordMapper;
 
-    @Autowired
-    private RedisTemplate redisTemplate;
+//    @Autowired
+//    private RedisTemplate redisTemplate;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -85,6 +81,7 @@ public class CouponServiceImpl implements CouponService {
      * @param category
      * @return
      */
+    @Transactional(rollbackFor=Exception.class,propagation= Propagation.REQUIRED)
     @Override
     public JsonData addCoupon(long couponId, CouponCategoryEnum category) {
 

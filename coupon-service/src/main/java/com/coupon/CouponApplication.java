@@ -1,10 +1,12 @@
 package com.coupon;
 
 import org.mybatis.spring.annotation.MapperScan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mybatis.spring.annotation.MapperScans;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -16,8 +18,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @MapperScan("com.coupon.mapper")
+@EnableTransactionManagement
+@ComponentScan({"com.lh.**","com.coupon.**"})
 public class CouponApplication {
-    private final static Logger logger = LoggerFactory.getLogger(CouponApplication.class);
 
     public static void main(String[] args){
             SpringApplication.run(CouponApplication.class, args);
