@@ -1,9 +1,10 @@
 package com.product;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -14,8 +15,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date 2021/01/28 16:03
  */
 @SpringBootApplication
+@MapperScan("com.product.mapper")
+@EnableTransactionManagement
+@ComponentScan({"com.lh.**","com.product.**"})
 public class ProductApplication {
-    private final static Logger logger = LoggerFactory.getLogger(ProductApplication.class);
 
     public static void main(String[] args){
             SpringApplication.run(ProductApplication.class, args);

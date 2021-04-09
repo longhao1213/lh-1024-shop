@@ -1,0 +1,32 @@
+server:
+  port: 9003
+spring:
+  application:
+    name: product-service
+  #数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://longsan:3306/lh_product?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+  redis:
+    host: longsan
+    password: 123456
+    port: 8000
+
+    properties.mail.smtp.starttls.enable: true
+    properties.mail.smtp.starttls.required: true
+    properties.mail.smtp.ssl.enable: true
+    default-encoding: utf-8
+
+
+
+#配置plus打印sql日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#设置日志级别,ERROR/WARN/INFO/DEBUG,默认是INFO以上才显示
+#logging:
+#  level:
+#    root: INFO
