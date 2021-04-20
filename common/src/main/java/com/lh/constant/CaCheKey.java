@@ -11,4 +11,9 @@ package com.lh.constant;
 public class CaCheKey {
     // 注册验证码 第一个参数是类型，第二个是接收号码
     public static final String CHECK_CODE_KEY = "code:%s:%s";
+
+    /**
+     * 购物车 hash 结构，key是用户唯一标识
+     */
+    public static final String CART_KEY = "cart:%s";
 }

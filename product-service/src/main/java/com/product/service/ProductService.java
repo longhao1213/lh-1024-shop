@@ -3,6 +3,7 @@ package com.product.service;
 
 import com.product.vo.ProductVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,4 +30,11 @@ public interface ProductService {
      * @return
      */
     ProductVO findDetailById(long productId);
+
+    /**
+     * 根据id批量查询价格
+     * @param productIdList
+     * @return
+     */
+    List<ProductVO> findProductsByIdBatch(List<Long> productIdList);
 }
