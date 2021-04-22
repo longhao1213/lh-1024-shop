@@ -3,10 +3,12 @@ package com.lh.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lh.enums.BizCodeEnum;
 import com.lh.enums.SendCodeEnum;
+import com.lh.fegin.CouponFeignService;
 import com.lh.interceptor.LoginInterceptor;
 import com.lh.model.LoginUser;
 import com.lh.model.UserDO;
 import com.lh.mapper.UserMapper;
+import com.lh.request.NewUserCouponRequest;
 import com.lh.request.UserLoginRequest;
 import com.lh.service.NotifyService;
 import com.lh.service.UserService;
@@ -38,6 +40,8 @@ import java.util.List;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
+    @Autowired
+    private CouponFeignService couponFeignService;
 
     @Autowired
     private UserMapper userMapper;
@@ -145,9 +149,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     /**
      * 用户注册，初始化福利信息 TODO
+     *
      * @param userDO
      */
-    private void userRegisterInitTask(UserDO userDO){
+    private void userRegisterInitTask(UserDO userDO) {
+
+
+        NewUserCouponRequest request = new NewUserCouponRequest();
+        request.setName(userDO.getName());
+        request.setUserId(userDO.getId());
+        JsonData jsonData = couponFeignService.addNewUserCoupon(request);
+        log.info("发放新用户注册优惠券：{},结果:{}",request.toString(),jsonData.toString());
 
     }
 }
