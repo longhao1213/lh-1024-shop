@@ -1,15 +1,15 @@
 server:
-  port: 9002
+  port: 9004
 spring:
   application:
-    name: coupon-service
+    name: order-service
   cloud: #注册中心地址 nacos:
     discovery:
       server-addr: 8.135.107.8:8848
   #数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://8.135.107.8:3306/lh_coupon?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://8.135.107.8:3306/lh_order?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
   redis:
