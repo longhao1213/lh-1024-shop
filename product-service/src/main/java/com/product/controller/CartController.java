@@ -3,12 +3,15 @@ package com.product.controller;
 import com.lh.utils.JsonData;
 import com.product.request.CartItemRequest;
 import com.product.service.CartService;
+import com.product.vo.CartItemVO;
 import com.product.vo.CartVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 小滴课堂,愿景：让技术不再难学
@@ -79,6 +82,23 @@ public class CartController {
 
         cartService.deleteItem(productId);
         return JsonData.buildSuccess();
+    }
+
+    /**
+     * 用于订单服务，确认订单，获取对应的商品项详情信息
+     *
+     * 会清空购物车的商品数据
+     * @param productIdList
+     * @return
+     */
+    @ApiOperation("获取对应订单的商品信息")
+    @PostMapping("confirm_order_cart_items")
+    public JsonData confirmOrderCartItems(@ApiParam("商品id列表") @RequestBody List<Long> productIdList){
+
+        List<CartItemVO> cartItemVOList = cartService.confirmOrderCartItems(productIdList);
+
+        return JsonData.buildSuccess(cartItemVOList);
+
     }
 
 

@@ -14,6 +14,6 @@ public interface CouponFeignService {
      * @param newUserCouponRequest
      * @return
      */
-    @PostMapping("/api/coupon/v1/new_user_coupon")
+    @PostMapping("api/coupon/v1/new_user_coupon")
     JsonData addNewUserCoupon(@RequestBody NewUserCouponRequest newUserCouponRequest);
 }

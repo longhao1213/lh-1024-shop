@@ -2,7 +2,10 @@ package com.product.service;
 
 
 import com.product.request.CartItemRequest;
+import com.product.vo.CartItemVO;
 import com.product.vo.CartVO;
+
+import java.util.List;
 
 public interface CartService {
 
@@ -34,4 +37,6 @@ public interface CartService {
      * @param cartItemRequest
      */
     void changeItemNum(CartItemRequest cartItemRequest);
+
+    List<CartItemVO> confirmOrderCartItems(List<Long> productIdList);
 }

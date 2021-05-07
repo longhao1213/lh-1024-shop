@@ -2,7 +2,9 @@ package com.coupon.service;
 
 import com.coupon.model.CouponRecordDO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.coupon.request.LockCouponRecordRequest;
 import com.coupon.vo.CouponRecordVO;
+import com.lh.utils.JsonData;
 
 import java.util.Map;
 
@@ -32,4 +34,10 @@ public interface CouponRecordService {
      */
     CouponRecordVO findById(long recordId);
 
+    /**
+     * 锁定优惠券
+     * @param recordRequest
+     * @return
+     */
+    JsonData lockCouponRecords(LockCouponRecordRequest recordRequest);
 }

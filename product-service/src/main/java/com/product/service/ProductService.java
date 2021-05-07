@@ -1,6 +1,9 @@
 package com.product.service;
 
 
+import com.lh.model.ProductMessage;
+import com.lh.utils.JsonData;
+import com.product.request.LockProductRequest;
 import com.product.vo.ProductVO;
 
 import java.util.List;
@@ -37,4 +40,20 @@ public interface ProductService {
      * @return
      */
     List<ProductVO> findProductsByIdBatch(List<Long> productIdList);
+
+
+    /**
+     * 锁定商品库存
+     * @param lockProductRequest
+     * @return
+     */
+    JsonData lockProductStock(LockProductRequest lockProductRequest);
+
+
+    /**
+     * 释放商品库存
+     * @param productMessage
+     * @return
+     */
+    boolean releaseProductStock(ProductMessage productMessage);
 }

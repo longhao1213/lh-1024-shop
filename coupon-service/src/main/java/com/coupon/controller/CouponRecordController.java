@@ -1,6 +1,7 @@
 package com.coupon.controller;
 
 
+import com.coupon.request.LockCouponRecordRequest;
 import com.coupon.service.CouponRecordService;
 import com.coupon.vo.CouponRecordVO;
 import com.lh.enums.BizCodeEnum;
@@ -35,23 +36,24 @@ public class CouponRecordController {
     @GetMapping("page")
     public JsonData page(@ApiParam(value = "当前页") @RequestParam(value = "page", defaultValue = "1") int page,
                          @ApiParam(value = "每页显示多少条") @RequestParam(value = "size", defaultValue = "10") int size) {
-
-
         Map<String, Object> pageResult = couponRecordService.page(page, size);
-
         return JsonData.buildSuccess(pageResult);
     }
 
     @ApiOperation("查询优惠券记录详情")
     @GetMapping("detail/{record_id}")
     public JsonData getCouponRecordDetail(@ApiParam(value = "记录id")  @PathVariable("record_id") long recordId){
-
-
-
         CouponRecordVO couponRecordVO = couponRecordService.findById(recordId);
-
         return couponRecordVO == null ? JsonData.buildResult(BizCodeEnum.COUPON_NO_EXITS):JsonData.buildSuccess(couponRecordVO);
+    }
+
+    @ApiOperation("rpc-锁定，优惠券记录")
+    @PostMapping("lock_records")
+    public JsonData lockCouponRecords(@ApiParam("锁定优惠券请求对象") @RequestBody LockCouponRecordRequest recordRequest){
+        JsonData jsonData = couponRecordService.lockCouponRecords(recordRequest);
+        return jsonData;
 
     }
+
 
 }

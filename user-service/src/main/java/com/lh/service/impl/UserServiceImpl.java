@@ -17,6 +17,7 @@ import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
 import com.lh.utils.JwtUtils;
 import com.lh.vo.UserVo;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +25,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.lh.request.UserRegisterRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -50,16 +52,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private NotifyService notifyService;
 
     @Override
+    @Transactional
+//    @GlobalTransactional
     public JsonData register(UserRegisterRequest userRegisterRequest) {
         boolean checkCode = false;
         //校验验证码
-        if(StringUtils.isNotBlank(userRegisterRequest.getMail())){
-            checkCode = notifyService.checkCode(SendCodeEnum.USER_REGISTER,userRegisterRequest.getMail(),userRegisterRequest.getCode());
-        }
+//        if(StringUtils.isNotBlank(userRegisterRequest.getMail())){
+//            checkCode = notifyService.checkCode(SendCodeEnum.USER_REGISTER,userRegisterRequest.getMail(),userRegisterRequest.getCode());
+//        }
 
-        if(!checkCode){
-            return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
-        }
+//        if(!checkCode){
+//            return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
+//        }
 
         UserDO userDO = new UserDO();
         BeanUtils.copyProperties(userRegisterRequest,userDO);
@@ -80,6 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
             //新用户注册成功，初始化信息，发放福利等 TODO
             userRegisterInitTask(userDO);
+//            int i = 1/0;
             return JsonData.buildSuccess();
         }else {
             return JsonData.buildResult(BizCodeEnum.ACCOUNT_REPEAT);
@@ -153,12 +158,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * @param userDO
      */
     private void userRegisterInitTask(UserDO userDO) {
-
-
         NewUserCouponRequest request = new NewUserCouponRequest();
         request.setName(userDO.getName());
         request.setUserId(userDO.getId());
         JsonData jsonData = couponFeignService.addNewUserCoupon(request);
+        if (jsonData.getCode() != 0) {
+            throw new RuntimeException("发放优惠券异常");
+        }
         log.info("发放新用户注册优惠券：{},结果:{}",request.toString(),jsonData.toString());
 
     }

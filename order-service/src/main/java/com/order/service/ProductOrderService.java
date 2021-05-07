@@ -1,5 +1,6 @@
 package com.order.service;
 
+import com.lh.model.OrderMessage;
 import com.lh.utils.JsonData;
 import com.order.model.ProductOrderDO;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -16,4 +17,8 @@ import com.order.request.ConfirmOrderRequest;
 public interface ProductOrderService {
 
     JsonData confirmOrder(ConfirmOrderRequest orderRequest);
+
+    String queryProductOrderState(String outTradeNo);
+
+    boolean closeProductOrder(OrderMessage orderMessage);
 }

@@ -1,5 +1,6 @@
 package com.lh.config;
 
+import feign.RequestInterceptor;
 import lombok.Data;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -11,6 +12,10 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Copyright (C), 2006-2010, ChengDu longsan info. Co., Ltd.
@@ -67,5 +72,23 @@ public class AppConfig {
         redisTemplate.setValueSerializer(redisSerializer);
 
         return redisTemplate;
+    }
+
+    /**
+     * feign调用丢失token解决方案，新增拦截器
+     * @return
+     */
+    @Bean
+    public RequestInterceptor requestInterceptor() {
+        return template ->{
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                if (request == null) {
+                    return;
+                }
+                template.header("token", request.getHeader("token"));
+            }
+        };
     }
 }

@@ -2,6 +2,7 @@ package com.product.controller;
 
 
 import com.lh.utils.JsonData;
+import com.product.request.LockProductRequest;
 import com.product.service.ProductService;
 import com.product.vo.ProductVO;
 import io.swagger.annotations.Api;
@@ -43,6 +44,21 @@ public class ProductController {
         ProductVO productVO = productService.findDetailById(productId);
         return JsonData.buildSuccess(productVO);
     }
+
+    /**
+     * 商品库存锁定
+     * @return
+     */
+    @ApiOperation("商品库存锁定")
+    @PostMapping("lock_products")
+    public JsonData lockProducts(@ApiParam("商品库存锁定") @RequestBody LockProductRequest lockProductRequest){
+
+
+        JsonData jsonData = productService.lockProductStock(lockProductRequest);
+
+        return jsonData;
+    }
+
 
 }
 
