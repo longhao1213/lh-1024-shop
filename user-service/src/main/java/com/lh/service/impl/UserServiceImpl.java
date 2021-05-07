@@ -17,7 +17,6 @@ import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
 import com.lh.utils.JwtUtils;
 import com.lh.vo.UserVo;
-import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
