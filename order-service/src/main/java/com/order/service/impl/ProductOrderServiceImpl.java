@@ -10,6 +10,7 @@ import com.lh.model.LoginUser;
 import com.lh.model.OrderMessage;
 import com.lh.utils.CommonUtil;
 import com.lh.utils.JsonData;
+import com.order.component.PayFactory;
 import com.order.config.RabbitMQConfig;
 import com.order.feign.CouponFeignSerivce;
 import com.order.feign.ProductFeignService;
@@ -63,7 +64,6 @@ public class ProductOrderServiceImpl implements ProductOrderService {
     @Autowired
     private CouponFeignSerivce couponFeignSerivce;
 
-
     @Autowired
     private ProductOrderItemMapper orderItemMapper;
 
@@ -72,6 +72,9 @@ public class ProductOrderServiceImpl implements ProductOrderService {
 
     @Autowired
     private RabbitMQConfig rabbitMQConfig;
+
+    @Autowired
+    private PayFactory payFactory;
 
     /**
      * * 防重提交
@@ -137,7 +140,7 @@ public class ProductOrderServiceImpl implements ProductOrderService {
 
 
         //创建支付  TODO
-
+//        payFactory.pay();
 
         return null;
     }
