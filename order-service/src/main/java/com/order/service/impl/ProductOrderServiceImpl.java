@@ -3,6 +3,9 @@ package com.order.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lh.constant.TimeConstant;
 import com.lh.enums.*;
 import com.lh.exception.BizException;
 import com.lh.interceptor.LoginInterceptor;
@@ -19,25 +22,20 @@ import com.order.mapper.ProductOrderItemMapper;
 import com.order.model.ProductOrderDO;
 import com.order.mapper.ProductOrderMapper;
 import com.order.model.ProductOrderItemDO;
-import com.order.request.ConfirmOrderRequest;
-import com.order.request.LockCouponRecordRequest;
-import com.order.request.LockProductRequest;
-import com.order.request.OrderItemRequest;
+import com.order.request.*;
 import com.order.service.ProductOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.order.vo.CouponRecordVO;
-import com.order.vo.OrderItemVO;
-import com.order.vo.ProductOrderAddressVO;
+import com.order.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -110,7 +108,7 @@ public class ProductOrderServiceImpl implements ProductOrderService {
         List<Long> productIdList = orderRequest.getProductIdList();
 
         JsonData cartItemDate = productFeignService.confirmOrderCartItem(productIdList);
-        List<OrderItemVO> orderItemList  = cartItemDate.getData(new TypeReference<>(){});
+        List<OrderItemVO> orderItemList  = cartItemDate.getData(new TypeReference<List>(){});
         log.info("获取的商品:{}",orderItemList);
         if(orderItemList == null){
             //购物车商品不存在
@@ -139,10 +137,19 @@ public class ProductOrderServiceImpl implements ProductOrderService {
         rabbitTemplate.convertAndSend(rabbitMQConfig.getEventExchange(),rabbitMQConfig.getOrderCloseDelayRoutingKey(),orderMessage);
 
 
-        //创建支付  TODO
-//        payFactory.pay();
+        //创建支付
+        PayInfoVO payInfoVO = new PayInfoVO(orderOutTradeNo,
+                productOrderDO.getPayAmount(),orderRequest.getPayType(),
+                orderRequest.getClientType(), orderItemList.get(0).getProductTitle(),"", TimeConstant.ORDER_PAY_TIMEOUT_MILLS);
 
-        return null;
+        String payResult = payFactory.pay(payInfoVO);
+        if(StringUtils.isNotBlank(payResult)){
+            log.info("创建支付订单成功:payInfoVO={},payResult={}",payInfoVO,payResult);
+            return JsonData.buildSuccess(payResult);
+        }else {
+            log.error("创建支付订单失败:payInfoVO={},payResult={}",payInfoVO,payResult);
+            return JsonData.buildResult(BizCodeEnum.PAY_ORDER_FAIL);
+        }
     }
 
     /**
@@ -329,7 +336,7 @@ public class ProductOrderServiceImpl implements ProductOrderService {
 
         if(couponData.getCode()==0){
 
-            CouponRecordVO couponRecordVO = couponData.getData(new TypeReference<>(){});
+            CouponRecordVO couponRecordVO = couponData.getData(new TypeReference<CouponRecordVO>(){});
 
             if(!couponAvailable(couponRecordVO)){
                 log.error("优惠券使用失败");
@@ -373,7 +380,7 @@ public class ProductOrderServiceImpl implements ProductOrderService {
             throw new BizException(BizCodeEnum.ADDRESS_NO_EXITS);
         }
 
-        ProductOrderAddressVO addressVO = addressData.getData(new TypeReference<>(){});
+        ProductOrderAddressVO addressVO = addressData.getData(new TypeReference<ProductOrderAddressVO>(){});
 
         return addressVO;
     }
@@ -417,12 +424,11 @@ public class ProductOrderServiceImpl implements ProductOrderService {
             return true;
         }
 
-        //向第三方支付查询订单是否真的未支付  TODO
-
-
-
-
-        String payResult = "";
+        //向第三方支付查询订单是否真的未支付
+        PayInfoVO payInfoVO = new PayInfoVO();
+        payInfoVO.setPayType(productOrderDO.getPayType());
+        payInfoVO.setOutTradeNo(orderMessage.getOutTradeNo());
+        String payResult = payFactory.queryPaySuccess(payInfoVO);
 
         //结果为空，则未支付成功，本地取消订单
         if(StringUtils.isBlank(payResult)){
@@ -435,7 +441,135 @@ public class ProductOrderServiceImpl implements ProductOrderService {
             productOrderMapper.updateOrderPayState(productOrderDO.getOutTradeNo(),ProductOrderStateEnum.PAY.name(),ProductOrderStateEnum.NEW.name());
             return true;
         }
+    }
+
+    /***
+     * 支付通知结果更新订单状态
+     * @param alipay
+     * @param paramsMap
+     * @return
+     */
+    @Override
+    public JsonData handlerOrderCallbackMsg(ProductOrderPayTypeEnum payType, Map<String, String> paramsMap) {
+
+        if(payType.name().equalsIgnoreCase(ProductOrderPayTypeEnum.ALIPAY.name())){
+            //支付宝支付
+            //获取商户订单号
+            String outTradeNo = paramsMap.get("out_trade_no");
+            //交易的状态
+            String tradeStatus = paramsMap.get("trade_status");
+
+            if("TRADE_SUCCESS".equalsIgnoreCase(tradeStatus) || "TRADE_FINISHED".equalsIgnoreCase(tradeStatus)){
+                //更新订单状态
+                productOrderMapper.updateOrderPayState(outTradeNo,ProductOrderStateEnum.PAY.name(),ProductOrderStateEnum.NEW.name());
+                return JsonData.buildSuccess();
+            }
+
+        } else if(payType.name().equalsIgnoreCase(ProductOrderPayTypeEnum.WECHAT.name())){
+            //微信支付  TODO
+        }
+
+        return JsonData.buildResult(BizCodeEnum.PAY_ORDER_CALLBACK_NOT_SUCCESS);
+    }
+
+    /**
+     * 分页查询我的订单
+     * @param page
+     * @param size
+     * @param state
+     * @return
+     */
+    @Override
+    public Map<String, Object> page(int page, int size, String state) {
+        LoginUser loginUser = LoginInterceptor.threadLocal.get();
+
+        Page<ProductOrderDO> pageInfo = new Page<>(page,size);
+
+        IPage<ProductOrderDO> orderDOPage = null;
+
+        if(StringUtils.isBlank(state)){
+            orderDOPage = productOrderMapper.selectPage(pageInfo,new QueryWrapper<ProductOrderDO>().eq("user_id",loginUser.getId()));
+        }else {
+            orderDOPage = productOrderMapper.selectPage(pageInfo,new QueryWrapper<ProductOrderDO>().eq("user_id",loginUser.getId()).eq("state",state));
+        }
+
+        //获取订单列表
+        List<ProductOrderDO> productOrderDOList =  orderDOPage.getRecords();
+
+        List<ProductOrderVO> productOrderVOList =  productOrderDOList.stream().map(orderDO->{
+
+            List<ProductOrderItemDO> itemDOList = orderItemMapper.selectList(new QueryWrapper<ProductOrderItemDO>().eq("product_order_id",orderDO.getId()));
+
+            List<OrderItemVO> itemVOList =  itemDOList.stream().map(item->{
+                OrderItemVO itemVO = new OrderItemVO();
+                BeanUtils.copyProperties(item,itemVO);
+                return itemVO;
+            }).collect(Collectors.toList());
+
+            ProductOrderVO productOrderVO = new ProductOrderVO();
+            BeanUtils.copyProperties(orderDO,productOrderVO);
+            productOrderVO.setOrderItemList(itemVOList);
+            return productOrderVO;
+
+        }).collect(Collectors.toList());
+
+        Map<String,Object> pageMap = new HashMap<>(3);
+        pageMap.put("total_record",orderDOPage.getTotal());
+        pageMap.put("total_page",orderDOPage.getPages());
+        pageMap.put("current_data",productOrderVOList);
+
+        return pageMap;
+    }
+
+    @Override
+    @Transactional
+    public JsonData repay(RepayOrderRequest repayOrderRequest) {
+        LoginUser loginUser = LoginInterceptor.threadLocal.get();
+
+        ProductOrderDO productOrderDO = productOrderMapper.selectOne(new QueryWrapper<ProductOrderDO>().eq("out_trade_no", repayOrderRequest.getOutTradeNo()).eq("user_id", loginUser.getId()));
+
+        log.info("订单状态:{}", productOrderDO);
+
+        if (productOrderDO == null) {
+            return JsonData.buildResult(BizCodeEnum.PAY_ORDER_NOT_EXIST);
+        }
+
+        //订单状态不对，不是NEW状态
+        if (!productOrderDO.getState().equalsIgnoreCase(ProductOrderStateEnum.NEW.name())) {
+            return JsonData.buildResult(BizCodeEnum.PAY_ORDER_STATE_ERROR);
+        } else {
+            //订单创建到现在的存活时间
+            long orderLiveTime = CommonUtil.getCurrentTimestamp() - productOrderDO.getCreateTime().getTime();
+            //创建订单是临界点，所以再增加1分钟多几秒，假如29分，则也不能支付了
+            orderLiveTime = orderLiveTime + 70 * 1000;
 
 
+            //大于订单超时时间，则失效
+            if (orderLiveTime > TimeConstant.ORDER_PAY_TIMEOUT_MILLS) {
+                return JsonData.buildResult(BizCodeEnum.PAY_ORDER_PAY_TIMEOUT);
+            } else {
+
+                //记得更新DB订单支付参数 payType，还可以增加订单支付信息日志  TODO
+
+
+                //总时间-存活的时间 = 剩下的有效时间
+                long timeout = TimeConstant.ORDER_PAY_TIMEOUT_MILLS - orderLiveTime;
+                //创建支付
+                PayInfoVO payInfoVO = new PayInfoVO(productOrderDO.getOutTradeNo(),
+                        productOrderDO.getPayAmount(), repayOrderRequest.getPayType(),
+                        repayOrderRequest.getClientType(), productOrderDO.getOutTradeNo(), "", timeout);
+
+                log.info("payInfoVO={}", payInfoVO);
+                String payResult = payFactory.pay(payInfoVO);
+                if (StringUtils.isNotBlank(payResult)) {
+                    log.info("创建二次支付订单成功:payInfoVO={},payResult={}", payInfoVO, payResult);
+                    return JsonData.buildSuccess(payResult);
+                } else {
+                    log.error("创建二次支付订单失败:payInfoVO={},payResult={}", payInfoVO, payResult);
+                    return JsonData.buildResult(BizCodeEnum.PAY_ORDER_FAIL);
+                }
+
+            }
+        }
     }
 }
