@@ -90,7 +90,7 @@ public class CouponServiceImpl implements CouponService {
         LoginUser loginUser = LoginInterceptor.threadLocal.get();
 
         // 使用框架加锁方式
-        String lockKey = "lock:coupon:" + couponId;
+        String lockKey = "lock:coupon:" + couponId + ":" + loginUser.getId();
         RLock lock = redissonClient.getLock(lockKey);
         lock.lock();
         log.info("加锁成功：{}", Thread.currentThread().getId());
