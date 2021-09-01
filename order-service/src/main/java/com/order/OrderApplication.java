@@ -18,12 +18,12 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @version 1.0.0
  * @Date 2021/01/28 16:02
  */
-@SpringBootApplication
 @MapperScan("com.order.mapper")
 @EnableTransactionManagement
 @ComponentScan({"com.lh.**","com.order.**"})
 @EnableFeignClients
 @EnableDiscoveryClient
+@SpringBootApplication
 public class OrderApplication {
     private final static Logger logger = LoggerFactory.getLogger(OrderApplication.class);
 
